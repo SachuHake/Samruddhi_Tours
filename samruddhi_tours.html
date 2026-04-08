@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samruddhi Bill Maker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* General UI Styling */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f9; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .header-section { text-align: center; margin-bottom: 20px; }
+        .logo-icon { font-size: 40px; color: #2980b9; margin-bottom: 10px; }
+        h2 { color: #2c3e50; margin: 0; font-size: 22px; }
+        .mobile-no { font-weight: bold; color: #27ae60; margin: 5px 0; font-size: 16px; display: block; }
+        .subtitle { font-size: 12px; color: #7f8c8d; margin: 0; }
+        .static-info { background: #eef2f3; padding: 10px; border-radius: 6px; margin-top: 15px; border-left: 4px solid #2980b9; font-size: 14px; }
+        .static-info span { font-weight: bold; color: #2c3e50; }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        
+        button { width: 100%; color: white; border: none; padding: 15px; border-radius: 6px; font-size: 16px; margin-top: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .gen-btn { background: #27ae60; }
+        .wa-text-btn { background: #25D366; display: none; }
+        .print-btn { background: #2980b9; display: none; }
+
+        /* A4 Print Layout Fixes */
+        #printableBill { display: none; }
+        
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background: white; padding: 0; }
+            .no-print { display: none !important; }
+            #printableBill { 
+                display: block !important; 
+                width: 100%;
+                padding: 20mm;
+                box-sizing: border-box;
+                font-family: 'Helvetica', Arial, sans-serif;
+                color: black;
+            }
+            .bill-meta { 
+                display: flex !important; 
+                justify-content: space-between !important; 
+                width: 100%; 
+                margin-top: 30px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card no-print">
+    <div class="header-section">
+        <div class="logo-icon"><i class="fas fa-car-side"></i></div>
+        <h2>SAMRUDDHI TOURS & TRAVELS</h2>
+        <span class="mobile-no"><i class="fas fa-phone-alt"></i> 7030403312</span>
+        <p class="subtitle">Safe & Reliable Travels</p>
+    </div>
+    
+    <div class="static-info">Vehicle Number: <span>MH 12 XM 1810</span></div>
+
+    <label>Journey Date</label>
+    <input type="date" id="journeyDate">
+
+    <label>Customer Name</label>
+    <input type="text" id="custName" placeholder="Full Name">
+
+    <label>Route Details</label>
+    <input type="text" id="route" placeholder="e.g. Pune to Mumbai">
+
+    <label>Total Amount (₹)</label>
+    <input type="number" id="amt" placeholder="0.00">
+
+    <button class="gen-btn" onclick="generateBill()"><i class="fas fa-sync"></i> Generate Bill</button>
+    
+    <button id="waTextBtn" class="wa-text-btn" onclick="shareAsText()">
+        <i class="fab fa-whatsapp"></i> Share Bill Text
+    </button>
+    
+    <button id="printBtn" class="print-btn" onclick="window.print()">
+        <i class="fas fa-file-download"></i> Save A4 PDF / Print
+    </button>
+</div>
+
+<div id="printableBill">
+    <div style="text-align: center; border-bottom: 3px solid #2c3e50; padding-bottom: 15px;">
+        <h1 style="margin: 0; font-size: 32px; color: #2c3e50;">SAMRUDDHI TOURS & TRAVELS</h1>
+        <p style="margin: 8px 0; font-size: 20px; font-weight: bold; color: #27ae60;">Contact: 7030403312</p>
+        <p style="margin: 0; font-size: 14px; font-style: italic; color: #7f8c8d;">Safe & Reliable Travels</p>
+    </div>
+
+    <div class="bill-meta">
+        <div style="font-size: 16px;"><strong>Bill No:</strong> <span id="pBillNo"></span></div>
+        <div style="font-size: 16px; text-align: right; min-width: 200px;"><strong>Date:</strong> <span id="pDate"></span></div>
+    </div>
+
+    <table style="width: 100%; margin-top: 40px; border-collapse: collapse; table-layout: fixed;">
+        <tr style="background: #2c3e50; color: white;">
+            <th style="padding: 15px; border: 1px solid #2c3e50; text-align: left; width: 40%;">Description</th>
+            <th style="padding: 15px; border: 1px solid #2c3e50; text-align: left; width: 60%;">Details</th>
+        </tr>
+        <tr>
+            <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold;">Customer Name</td>
+            <td style="padding: 15px; border: 1px solid #ddd;" id="pCustName"></td>
+        </tr>
+        <tr>
+            <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold;">Vehicle Number</td>
+            <td style="padding: 15px; border: 1px solid #ddd;">MH 12 XM 1810</td>
+        </tr>
+        <tr>
+            <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold;">Route Details</td>
+            <td style="padding: 15px; border: 1px solid #ddd;" id="pRoute"></td>
+        </tr>
+        <tr style="font-size: 22px;">
+            <td style="padding: 20px; border: 1px solid #ddd; text-align: right; font-weight: bold; background: #f9f9f9;">TOTAL</td>
+            <td style="padding: 20px; border: 1px solid #ddd; font-weight: bold; color: #d35400; background: #f9f9f9;">₹ <span id="pTotal"></span>.00</td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 100px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+        <p style="font-size: 16px; margin: 5px;">Thank you for choosing Samruddhi Travels!</p>
+        <p style="font-size: 18px; font-weight: bold; color: #2c3e50;">Have a safe and happy journey.</p>
+        <p style="font-size: 12px; color: #7f8c8d; margin-top: 40px; border: 1px dashed #ddd; display: inline-block; padding: 5px 15px;">
+            This is an auto-generated bill, signature not required.
+        </p>
+    </div>
+</div>
+
+<script>
+// Set default date to today's date on page load
+window.onload = function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('journeyDate').value = today;
+};
+
+let billData = {};
+
+function generateBill() {
+    const rawDate = document.getElementById('journeyDate').value;
+    const name = document.getElementById('custName').value || "Guest";
+    const route = document.getElementById('route').value || "Local Trip";
+    const amt = document.getElementById('amt').value || "0";
+    
+    // Format the date for display (DD/MM/YYYY)
+    let date = "N/A";
+    if (rawDate) {
+        const d = new Date(rawDate);
+        date = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+    
+    const billNo = "STT-" + Math.floor(1000 + Math.random() * 9000);
+
+    billData = { name, route, amt, date, billNo };
+
+    // Update Hidden Printable Bill
+    document.getElementById('pBillNo').innerText = billNo;
+    document.getElementById('pDate').innerText = date;
+    document.getElementById('pCustName').innerText = name;
+    document.getElementById('pRoute').innerText = route;
+    document.getElementById('pTotal').innerText = parseFloat(amt).toLocaleString('en-IN');
+
+    // Show Buttons
+    document.getElementById('waTextBtn').style.display = 'flex';
+    document.getElementById('printBtn').style.display = 'flex';
+}
+
+function shareAsText() {
+    const textMsg = `*SAMRUDDHI TOURS & TRAVELS*%0A` +
+                    `Contact: 7030403312%0A` +
+                    `----------------------------%0A` +
+                    `*Bill No:* ${billData.billNo}%0A` +
+                    `*Date:* ${billData.date}%0A` +
+                    `*Customer:* ${billData.name}%0A` +
+                    `*Vehicle:* MH 12 XM 1810%0A` +
+                    `*Route:* ${billData.route}%0A` +
+                    `----------------------------%0A` +
+                    `*TOTAL AMOUNT: ₹${parseFloat(billData.amt).toLocaleString('en-IN')}.00*%0A` +
+                    `----------------------------%0A` +
+                    `Thank you! Have a safe journey.`;
+    
+    window.open(`https://wa.me/?text=${textMsg}`, '_blank');
+}
+</script>
+
+</body>
+</html>
